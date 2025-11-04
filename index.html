@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PUTRA MUSIC PROJECT — Final 40 Playlist</title>
+<style>
+:root{
+  --accent:#1DB954;
+  --bg-dark:#0f0f0f;
+  --bg-light:#f5f5f5;
+  --text-dark:#fff;
+  --text-light:#111;
+  --card-dark:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  --card-light:linear-gradient(180deg, rgba(0,0,0,0.02), rgba(0,0,0,0.01));
+}
+body{
+  margin:0; font-family:Arial,sans-serif;
+  background:var(--bg-dark);
+  color:var(--text-dark);
+  display:flex; flex-direction:column; align-items:center; min-height:100vh;
+  overflow-x:hidden; position:relative;
+  transition: background 0.3s, color 0.3s;
+}
+.bg-overlay{
+  position:fixed; inset:0; background:linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0.55)); z-index:-1;
+}
+header{padding:12px; font-weight:700; font-size:16px;}
+.card{
+  max-width:800px; width:95%; margin:12px; padding:16px;
+  background:var(--card-dark);
+  border-radius:16px; display:flex; flex-wrap:wrap; gap:16px; align-items:center; box-shadow:0 8px 30px rgba(0,0,0,0.6);
+  transition:background 0.3s;
+}
+.left{display:flex; gap:12px; align-items:center; min-width:180px;}
+.cover{width:140px; height:140px; border-radius:12px; object-fit:cover; box-shadow:0 12px 40px rgba(0,0,0,0.6); transition:transform .6s ease;}
+.cover.playing{transform:rotate(1.6deg) scale(1.01);}
+.info{display:flex; flex-direction:column; gap:4px; min-width:140px;}
+.title{font-size:16px; font-weight:700;}
+.artist{color:#b3b3b3; font-size:11px;}
+.center{flex:1; display:flex; flex-direction:column; align-items:center; gap:12px;}
+.controls{display:flex; align-items:center; gap:12px; margin-top:4px;}
+#playPauseBtn{
+  width:60px; height:60px; border-radius:50%; background:var(--accent); border:none;
+  display:flex; align-items:center; justify-content:center; cursor:pointer;
+  box-shadow:0 8px 25px rgba(29,185,84,0.18); transition:transform .09s ease, box-shadow .12s;
+}
+#playPauseBtn:hover{transform:scale(1.05); box-shadow:0 12px 35px rgba(29,185,84,0.3);}
+#playPauseBtn:active{transform:scale(.97);}
+#playPauseBtn svg{width:28px; height:28px; display:block;}
+.progress-wrap{width:100%; max-width:400px;}
+.progress-bar{width:100%; height:6px; background:#2f2f2f; border-radius:999px; cursor:pointer; position:relative; overflow:hidden;}
+.progress{position:absolute; left:0; top:0; bottom:0; background:linear-gradient(90deg, var(--accent), #18c05a); width:0%; border-radius:999px; transition: width .18s linear;}
+.time-row{display:flex; justify-content:space-between; font-size:10px; color:#b3b3b3; margin-top:4px;}
+.right{width:220px; display:flex; flex-direction:column; gap:8px;}
+.playlist-title{font-size:12px; color:#b3b3b3; font-weight:600; margin-bottom:4px;}
+.playlist-list{display:flex; flex-direction:column; gap:6px; max-height:420px; overflow:auto; padding-right:4px; scroll-behavior:smooth;}
+.song-row{display:flex; gap:6px; align-items:center; padding:6px; border-radius:6px; cursor:pointer; transition:background .14s;}
+.song-row:hover{background: rgba(255,255,255,0.02);}
+.song-row.active{background:linear-gradient(90deg, rgba(29,185,84,0.08), rgba(29,185,84,0.03)); border-left:3px solid var(--accent); padding-left:3px;}
+.song-thumb{width:40px; height:40px; border-radius:6px; object-fit:cover;}
+.song-meta{display:flex; flex-direction:column; gap:2px;}
+.song-name{font-size:12px; font-weight:600;}
+.song-artist{font-size:10px; color:#b3b3b3;}
+#settingsBtn{
+  position:fixed; bottom:12px; right:12px; width:48px; height:48px; border-radius:24px;
+  background:#666; border:none; display:flex; align-items:center; justify-content:center; color:#fff; font-size:20px; cursor:pointer; z-index:99;
+}
+#settingsMenu{
+  position:fixed; bottom:64px; right:12px; width:180px; background:#222; border-radius:12px; display:flex; flex-direction:column; padding:10px; gap:8px; z-index:99;
+  transform: translateY(20px); opacity: 0; transition:all 0.3s ease;
+}
+#settingsMenu.show{transform: translateY(0); opacity: 1;}
+.setting-option{cursor:pointer; padding:4px; border-radius:8px; text-align:center; background:rgba(255,255,255,0.05); transition:background .2s; display:flex; justify-content:space-between; align-items:center;}
+.setting-option:hover{background:rgba(255,255,255,0.12);}
+.switch{
+  width:24px; height:12px; background:#555; border-radius:6px; position:relative; cursor:pointer;
+}
+.switch::before{
+  content:''; position:absolute; width:10px; height:10px; background:#fff; border-radius:50%; top:1px; left:1px; transition:0.2s;
+}
+.switch.on{background:#1DB954;}
+.switch.on::before{left:13px;}
+.lightning, .meteor {position:fixed; z-index:50; pointer-events:none; display:none;}
+.lightning {width:100%; height:100%; background:rgba(255,255,255,0.8); top:0; left:0; animation:flash 0.2s ease;}
+@keyframes flash {0%{opacity:1;}100%{opacity:0;}}
+.meteor {width:3px; height:25px; background:linear-gradient(to bottom, #fff, rgba(255,255,255,0)); position:absolute; animation:shoot 1s linear;}
+@keyframes shoot {0%{transform:translate(0,0) rotate(45deg);}100%{transform:translate(var(--mx,800px),var(--my,600px)) rotate(45deg); opacity:0;}}
+.rain-drop {position:absolute; width:2px; height:10px; background:rgba(255,255,255,0.3); top:-10px; animation:fall 0.5s linear forwards;}
+@keyframes fall {0%{transform:translateY(0);}100%{transform:translateY(100vh);}}
+.fire-flame {
+  position:absolute; bottom:0; width:4px; height:12px;
+  background:linear-gradient(to top, orange, red, yellow);
+  border-radius:50%; opacity:0.7; animation:rise 1s linear forwards;
+}
+@keyframes rise {
+  0% { transform:translateY(0) scaleX(1); opacity:0.7; }
+  50% { transform:translateY(-50px) scaleX(1.3); opacity:1; }
+  100% { transform:translateY(-120px) scaleX(0.8); opacity:0; }
+}
+#infoModal h3{margin:0 0 8px 0;font-size:16px;}
+#infoModal p{margin:4px 0;font-size:14px;}
+</style>
+</head>
+<body>
+<div class="bg-overlay"></div>
+<header>PUTRA MUSIC PROJECT</header>
+
+<main class="card">
+  <section class="left">
+    <img id="cover" class="cover" src="" alt="Cover">
+    <div class="info">
+      <div class="title" id="songTitle">Select a song</div>
+      <div class="artist" id="songArtist">BY PUTRA PROJECT</div>
+    </div>
+  </section>
+
+  <section class="center">
+    <div class="controls">
+      <button id="playPauseBtn" onclick="togglePlayPause()">
+        <svg id="playIcon" viewBox="0 0 24 24"><polygon points="6,4 20,12 6,20" fill="#fff"></polygon></svg>
+        <svg id="pauseIcon" viewBox="0 0 24 24" style="display:none;"><rect x="6" y="4" width="4" height="16" fill="#fff"></rect><rect x="14" y="4" width="4" height="16" fill="#fff"></rect></svg>
+      </button>
+    </div>
+  </section>
+
+  <aside class="right">
+    <div class="playlist-title">Playlist</div>
+    <div class="playlist-list" id="playlistList"></div>
+  </aside>
+</main>
+
+<button id="settingsBtn" onclick="toggleSettings()">⚙️</button>
+<div id="settingsMenu">
+  <div class="setting-option">🌝/🌚 Dark Mode <div class="switch" id="themeSwitch"></div></div>
+  <div class="setting-option">🌩 Lightning <div class="switch" id="lightningSwitch"></div></div>
+  <div class="setting-option">☄️ Meteor <div class="switch" id="meteorSwitch"></div></div>
+  <div class="setting-option">🌧 Rain <div class="switch" id="rainSwitch"></div></div>
+  <div class="setting-option">🔥 Fire <div class="switch" id="fireSwitch"></div></div>
+  <div class="setting-option">💤 Sleep <div class="switch" id="sleepSwitch"></div></div>
+</div>
+
+<button id="invisibleBtn" style="position:fixed;top:12px;right:12px;width:40px;height:40px;background:transparent;border:none;cursor:pointer;z-index:100;opacity:0.1;">🔍</button>
+<div id="infoModal" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#222;color:#fff;padding:20px;border-radius:12px;box-shadow:0 8px 25px rgba(0,0,0,0.6);display:none;z-index:101;max-width:300px;text-align:center;">
+  <h3>INFORMASI PEMBUAT WEBSITE</h3>
+  <p><strong>Nama:</strong> PUTRA</p>
+  <p><strong>Contact:</strong> 085169822303</p>
+  <p><strong>Email:</strong> seymavalk@gmail.com</p>
+  <button id="closeInfo" style="margin-top:10px;padding:6px 12px;border:none;border-radius:6px;background:#1DB954;color:#fff;cursor:pointer;">Tutup</button>
+</div>
+
+<div id="lightning" class="lightning"></div>
+<div id="rainContainer"></div>
+<div id="fireContainer"></div>
+<div id="sleepContainer"></div>
+<div id="ytPlayer"></div>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+<script>
+// === Playlist ===
+const playlist=[ /* daftar playlist kamu tetap sama */ 
+  {title:"DIBAWAH BATU NISAN KINI", videoId:"2HYaSzvwi4I", artist:"BY PUTRA PROJECT"},
+  {title:"TABOLA BALE", videoId:"VzXemuAgFoI", artist:"BY PUTRA PROJECT"},
+  {title:"CALON MANTU IDAMAN", videoId:"XgpRBmfU9gY", artist:"BY PUTRA PROJECT"},
+  {title:"LAGI TAMVAN", videoId:"P8moErPj7E8", artist:"BY PUTRA PROJECT"},
+  {title:"NGANA INI BAGAIMANA", videoId:"gpdItriCcXg", artist:"BY PUTRA PROJECT"},
+  {title:"OMBAK DI LAUT PASANG", videoId:"XD_h7nxqhUc", artist:"BY PUTRA PROJECT"},
+  {title:"KASIH ABA ABA", videoId:"oT3ohBykMok", artist:"BY PUTRA PROJECT"},
+  {title:"SU JAUH SA TANAM", videoId:"WmcKU8Iwnqw", artist:"BY PUTRA PROJECT"},
+  {title:"TIA MONIKA", videoId:"HuoU7DpLN5E", artist:"BY PUTRA PROJECT"},
+  {title:"MIMPI YANG SEMPURNA", videoId:"wEmdOM7pt5c", artist:"PUTRA PROJECT"},
+  {title:"SUNGGUH SAYANG AKU TAK BISA", videoId:"ezQOwKLarZo", artist:"BY PUTRA PROJECT"},
+  {title:"DAMON VACATION", videoId:"B7mwY37bBaM", artist:"BY PUTRA PROJECT"},
+  {title:"BAIK BAIK SAYANG", videoId:"1tRDjy8COxo", artist:"BY PUTRA PROJECT"},
+  {title:"LAVORA RASAH BALI", videoId:"m01S7Vflvao", artist:"BY PUTRA PROJECT"},
+  {title:"MELODY SWEET LOVE", videoId:"4gAQ0FNr3E8", artist:"PUTRA PROJECT"},
+  {title:"SIKSA MENANGGUNG RINDU", videoId:"Q0uljFMPDhk", artist:"BY PUTRA PROJECT"},
+  {title:"MASHUP OLD", videoId:"ss4GHrBR7Mw", artist:"BY PUTRA PROJECT"},
+  {title:"DALINDA OLD", videoId:"yzv9Y9jP8Ww", artist:"PUTRA PROJECT"},
+  {title:"ANGKAT PADI", videoId:"37WHJgOl6lI", artist:"BY PUTRA PROJECT"},
+  {title:"TANGKIS DANG", videoId:"8NplMZ8mzH4", artist:"BY PUTRA PROJECT"},
+  {title:"DINGIN KERINGETAN", videoId:"e7GkGAzXgt8", artist:"BY PUTRA PROJECT"},
+  {title:"HANING DAYAK", videoId:"ykVw5QYNRgo", artist:"BY PUTRA PROJECT"},
+  {title:"TERENA MATE", videoId:"IAe10-62Btc", artist:"BY PUTRA PROJECT"},
+  {title:"AKU BELUM MANDI JAMILAH", videoId:"Co44qlJMyho", artist:"BY PUTRA PROJECT"},
+  {title:"HATE SABE MERINDU", videoId:"-TZYKJSsxfQ", artist:"PUTRA PROJECT"},
+  {title:"UDARA MANA KINI YANG KAU HIRUP", videoId:"JhVqNhGUe-w", artist:"BY PUTRA PROJECT"},
+  {title:"GARAM DAN MADU", videoId:"XgVq9x6yKzs", artist:"BY PUTRA PROJECT"},
+  {title:"SATU HITAM MANIS SEDIKIT BERKUMIS", videoId:"dpYuquPTl6A", artist:"BY PUTRA PROJECT"},
+  {title:"AKU LAGI BETE", videoId:"SgaTyFqj9zE", artist:"BY PUTRA PROJECT"},
+  {title:"JIWA YANG BERSEDIH", videoId:"nuPPTBvvyj8", artist:"PUTRA PROJECT"},
+  {title:"GAK PAKE LAMA", videoId:"es4WLcvl7Fc", artist:"BY PUTRA PROJECT"},
+  {title:"DEE DEE DUM", videoId:"xq3S-_HyI-E", artist:"BY PUTRA PROJECT"},
+  {title:"AJOJING X CINTA PERTAMA", videoId:"HFMKbjBWKQo", artist:"BY PUTRA PROJECT"},
+  {title:"MALAM BANTU AKU TUK LULUHKAN DIA", videoId:"qiW-jeW0aT8", artist:"BY PUTRA PROJECT"},
+  {title:"KUBUKAN DOKTER CINTA", videoId:"PXJrRx0qEqo", artist:"PUTRA PROJECT"},
+  {title:"ORANG BARU LEBE GACOR", videoId:"1-kUPp8jV-A", artist:"BY PUTRA PROJECT"},
+  {title:"SADAR POSISI", videoId:"HlDgfMaevKk", artist:"BY PUTRA PROJECT"},
+  {title:"TOR MONITOR KETUA", videoId:"-lwedv88f5o", artist:"BY PUTRA PROJECT"},
+  {title:"KALO ADA SEMBILAN NYAWA", videoId:"odhQCKkaMzs", artist:"BY PUTRA PROJECT"},
+  {title:"ADE SU NIKAH", videoId:"ufN_EU9Tvww", artist:"BY PUTRA PROJECT"},
+  {title:"MIMI CUCU", videoId:"j-mVBQlUnS8", artist:"BY PUTRA PROJECT"},
+  {title:"CINTAKU PADAMU BERSEMI KEMBALI", videoId:"DQtP8V5Jw8A", artist:"BY PUTRA PROJECT"},
+  {title:"ANUGERAH TERINDAH", videoId:"MAbprp4kFBI", artist:"BY PUTRA PROJECT"}
+];
+let player,currentIndex=null;
+
+// === YouTube Player ===
+function onYouTubeIframeAPIReady(){
+  player=new YT.Player('ytPlayer',{height:'0',width:'0',videoId:'',
+    events:{'onStateChange':onPlayerStateChange}});
+}
+function loadSong(i){
+  currentIndex=i;
+  const s=playlist[i];
+  document.getElementById("songTitle").textContent=s.title;
+  document.getElementById("songArtist").textContent=s.artist;
+  document.getElementById("cover").src=`https://img.youtube.com/vi/${s.videoId}/hqdefault.jpg`;
+  player.loadVideoById(s.videoId);
+  highlightSong();
+}
+function togglePlayPause(){
+  const state=player.getPlayerState();
+  if(state===1)player.pauseVideo();
+  else player.playVideo();
+}
+function onPlayerStateChange(e){
+  const c=document.getElementById("cover");
+  if(e.data===1){
+    document.getElementById("playIcon").style.display="none";
+    document.getElementById("pauseIcon").style.display="block";
+    c.classList.add("playing");
+  }else{
+    document.getElementById("playIcon").style.display="block";
+    document.getElementById("pauseIcon").style.display="none";
+    c.classList.remove("playing");
+  }
+}
+function highlightSong(){
+  document.querySelectorAll(".song-row").forEach((el,i)=>{
+    el.classList.toggle("active",i===currentIndex);
+  });
+}
+const list=document.getElementById("playlistList");
+playlist.forEach((s,i)=>{
+  const row=document.createElement("div");
+  row.className="song-row";
+  row.innerHTML=`<img src="https://img.youtube.com/vi/${s.videoId}/default.jpg" class="song-thumb"><div class="song-meta"><div class="song-name">${s.title}</div><div class="song-artist">${s.artist}</div></div>`;
+  row.onclick=()=>loadSong(i);
+  list.appendChild(row);
+});
+
+// === Settings ===
+function toggleSettings(){document.getElementById("settingsMenu").classList.toggle("show");}
+function toggleSwitch(id,cb){
+  const sw=document.getElementById(id);
+  sw.onclick=()=>{sw.classList.toggle("on");cb(sw.classList.contains("on"));}
+}
+toggleSwitch("themeSwitch",on=>{document.body.style.background=on?"var(--bg-light)":"var(--bg-dark)";document.body.style.color=on?"var(--text-light)":"var(--text-dark)";});
+toggleSwitch("lightningSwitch",on=>{if(on)triggerLightning();});
+toggleSwitch("meteorSwitch",on=>{if(on)spawnMeteor();});
+toggleSwitch("rainSwitch",on=>{if(on)startRain();else stopRain();});
+toggleSwitch("fireSwitch",on=>{if(on)startFire();else stopFire();});
+toggleSwitch("sleepSwitch",on=>{if(on)startSleep();else stopSleep();});
+
+// === Effects ===
+function triggerLightning(){const l=document.getElementById("lightning");l.style.display="block";setTimeout(()=>l.style.display="none",200);}
+function spawnMeteor(){const m=document.createElement("div");m.className="meteor";m.style.left=Math.random()*window.innerWidth+"px";m.style.top="0";m.style.setProperty("--mx",(Math.random()*600)+"px");m.style.setProperty("--my",(Math.random()*600)+"px");document.body.appendChild(m);setTimeout(()=>m.remove(),1000);}
+let rainInt;
+function startRain(){const c=document.getElementById("rainContainer");rainInt=setInterval(()=>{const d=document.createElement("div");d.className="rain-drop";d.style.left=Math.random()*100+"vw";c.appendChild(d);setTimeout(()=>d.remove(),500);},50);}
+function stopRain(){clearInterval(rainInt);}
+let fireInt;
+function startFire(){const c=document.getElementById("fireContainer");fireInt=setInterval(()=>{const f=document.createElement("div");f.className="fire-flame";f.style.left=Math.random()*100+"vw";c.appendChild(f);setTimeout(()=>f.remove(),1000);},80);}
+function stopFire(){clearInterval(fireInt);}
+let sleepInt;
+function startSleep(){const c=document.getElementById("sleepContainer");sleepInt=setInterval(()=>{const z=document.createElement("div");z.textContent="💤";z.style.position="absolute";z.style.left=Math.random()*100+"vw";z.style.top="-20px";z.style.fontSize=(Math.random()*24+10)+"px";z.style.animation="fall 5s linear forwards";c.appendChild(z);setTimeout(()=>z.remove(),5000);},200);}
+function stopSleep(){clearInterval(sleepInt);}
+
+// === Info Modal ===
+document.getElementById("invisibleBtn").onclick=()=>{document.getElementById("infoModal").style.display="block";}
+document.getElementById("closeInfo").onclick=()=>{document.getElementById("infoModal").style.display="none";}
+</script>
+</body>
+</html>
